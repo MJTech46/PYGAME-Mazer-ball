@@ -5,6 +5,12 @@ import sys
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
+
+# Load and play background music
+pygame.mixer.music.load("assets/musics/Density & Time - MAZE  NO COPYRIGHT 8-bit Music.mp3")
+pygame.mixer.music.set_volume(0.75)  # Set volume (0.0 to 1.0)
+pygame.mixer.music.play(-1)  # Play indefinitely (-1 for looping)
 
 # Screen dimensions
 screen_width, screen_height = 800, 600
