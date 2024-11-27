@@ -1,23 +1,38 @@
-# Mazer ball
+# Mazer Ball
 
 import pygame
+import os
 import sys
 
 # Initialize Pygame
 pygame.init()
 pygame.mixer.init()
 
-# Load and play background music
-pygame.mixer.music.load("assets/musics/Density & Time - MAZE  NO COPYRIGHT 8-bit Music.mp3")
-pygame.mixer.music.set_volume(0.75)  # Set volume (0.0 to 1.0)
-pygame.mixer.music.play(-1)  # Play indefinitely (-1 for looping)
+# Music folder path
+music_folder = "assets/musics"
+
+# List all MP3 files in the music folder
+music_files = [os.path.join(music_folder, file) for file in os.listdir(music_folder) if file.endswith('.mp3')]
+
+# Function to play the next track
+def play_next_track():
+    global current_track_index
+    if music_files:
+        current_track_index = (current_track_index + 1) % len(music_files)
+        pygame.mixer.music.load(music_files[current_track_index])
+        pygame.mixer.music.play()
+        print(f"Now playing: {music_files[current_track_index]}")
+
+# Initialize the first track
+current_track_index = -1
+play_next_track()
 
 # Screen dimensions
 screen_width, screen_height = 800, 600
 
 # Create the display surface
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Display Image in Pygame")
+pygame.display.set_caption("Mazer Ball")
 
 # Load the image
 image = pygame.image.load("assets/sprites/wall/Black_Brick.png")
@@ -33,13 +48,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    # Check if the music has stopped, and play the next track
+    if not pygame.mixer.music.get_busy():
+        play_next_track()
+
     # Fill the screen with a color (optional)
     screen.fill((0, 0, 0))  # Black background
 
+    # Draw bricks
     for h in range(0, 750, 150):
-        for i in range(0,800, 50):
-            # Display the image at (x, y) coordinates
-            screen.blit(image, (i, h))  
+        for i in range(0, 800, 50):
+            screen.blit(image, (i, h))
 
     # Update the display
     pygame.display.flip()
