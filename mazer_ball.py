@@ -45,20 +45,36 @@ image = pygame.transform.scale(image, (new_width, new_height))
 # Brick movement settings
 brick_speed = 50  # Speed to move downward (pixels per second)
 time_interval = 1000  # Time interval in milliseconds (1 second)
-rows_on_screen = screen_height // new_height  # Number of rows visible on the screen
+bricks_on_screen = screen_width // new_width  # Number of bricks visible on the screen
 
-# Initialize brick rows with random patterns
-brick_rows = [row * new_height for row in range(rows_on_screen)]
+# Game initialization
+brick_rows = []  # No rows initially
+brick_patterns = []  # Patterns for bricks
+brick_start_delay = 3000  # Delay in milliseconds before the bricks start falling
+bricks_falling = False  # Flag to start brick generation
+prev_gapes = [1 if random.random() > 0.5 else 0 for _ in range(bricks_on_screen+1)]
+print(prev_gapes)
+print(bricks_on_screen)
 
-# Function to generate a new random row pattern
-def generate_row_pattern():
-    return [1 if random.random() > 0.5 else 0 for _ in range(screen_width // new_width)]
+# Function to generate a maze row with a random gap
+def generate_maze_row():
+    maze_row = []
+    for i in range(bricks_on_screen):
+        if random.random() > 0.5:
+            if not (prev_gapes[i-1] and prev_gapes[i] and prev_gapes[i+1]): 
+                maze_row.append(1)
+            else:
+                maze_row.append(0)
+        else:
+            maze_row.append(0)
+    # prev_gapes = maze_row + [1]       # ERROR HERE
+    print(maze_row)
+    return maze_row 
 
-# Create initial rows
-brick_patterns = [generate_row_pattern() for _ in range(rows_on_screen)]
 
 # Set up a timer for brick movement
 pygame.time.set_timer(pygame.USEREVENT + 1, time_interval)
+pygame.time.set_timer(pygame.USEREVENT + 2, brick_start_delay)  # Timer for brick start delay
 
 # Game loop
 running = True
@@ -66,18 +82,21 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.USEREVENT + 1:
+        elif event.type == pygame.USEREVENT + 1 and bricks_falling:
             # Move all rows downward
             brick_rows = [y + new_height for y in brick_rows]
 
             # Remove rows that move off-screen
-            if brick_rows[0] >= screen_height:
+            if brick_rows and brick_rows[0] >= screen_height:
                 brick_rows.pop(0)
                 brick_patterns.pop(0)
 
-            # Add a new row at the top
+            # Add a new maze row at the top
             brick_rows.insert(0, -new_height)
-            brick_patterns.insert(0, generate_row_pattern())
+            brick_patterns.insert(0, generate_maze_row())
+        elif event.type == pygame.USEREVENT + 2:
+            # Start generating bricks after delay
+            bricks_falling = True
 
     # Check if the music has stopped, and play the next track
     if not pygame.mixer.music.get_busy():
@@ -87,10 +106,11 @@ while running:
     screen.fill((0, 0, 0))  # Black background
 
     # Draw bricks
-    for row_index, row_y in enumerate(brick_rows):
-        for col_index, is_brick in enumerate(brick_patterns[row_index]):
-            if is_brick:
-                screen.blit(image, (col_index * new_width, row_y))
+    if bricks_falling:
+        for row_index, row_y in enumerate(brick_rows):
+            for col_index, is_brick in enumerate(brick_patterns[row_index]):
+                if is_brick:
+                    screen.blit(image, (col_index * new_width, row_y))
 
     # Update the display
     pygame.display.flip()
