@@ -40,8 +40,8 @@ PY-Mazer-Ball/
 ## 🎨 Roadmap
 
 - [x] Design the game concept.
-- [ ] Create the maze and obstacle system.
-- [ ] Implement ball physics and movement.
+- [x] Create the maze and obstacle system.
+- [x] Implement ball physics and movement.
 - [ ] Add scoring and timer mechanics.
 - [ ] Polish graphics and animations.
 - [ ] Include sound effects and background music.
