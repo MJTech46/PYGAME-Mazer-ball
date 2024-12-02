@@ -13,8 +13,8 @@ pygame.mixer.init()
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 BRICK_WIDTH, BRICK_HEIGHT = 50, 50
 INITIAL_BRICK_SPEED = 50  # Pixels per second
-BASE_TIME_INTERVAL = 1000  # Base time interval in milliseconds (1 second)
-BRICK_START_DELAY = 3000  # Initial delay before bricks start falling
+TIME_INTERVAL = 1000  # Time interval in milliseconds (1 second)
+BRICK_START_DELAY = 3000  # Delay before bricks start falling
 BRICKS_ON_SCREEN = SCREEN_WIDTH // BRICK_WIDTH
 BLACK = (0, 0, 0)
 
@@ -48,7 +48,7 @@ bricks_falling = False
 gap_start = (BRICKS_ON_SCREEN // 2) - 1
 
 # Speeding mechanism variables
-speed_multiplier = 1.0
+current_speed = INITIAL_BRICK_SPEED
 speed_increase_interval = 15000  # 15 seconds in milliseconds
 last_speed_increase_time = pygame.time.get_ticks()
 
@@ -84,8 +84,7 @@ def generate_maze_row():
     return row
 
 # Initialize timers
-current_time_interval = BASE_TIME_INTERVAL
-pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
+pygame.time.set_timer(pygame.USEREVENT + 1, TIME_INTERVAL)
 pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
 
 # Start the first track
@@ -101,7 +100,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.USEREVENT + 1 and bricks_falling:
-            brick_rows = [y + BRICK_HEIGHT for y in brick_rows]
+            brick_rows = [y + current_speed * TIME_INTERVAL // 1000 for y in brick_rows]
             if brick_rows and brick_rows[0] >= SCREEN_HEIGHT:
                 brick_rows.pop(0)
                 brick_patterns.pop(0)
@@ -118,11 +117,9 @@ while running:
 
     # Speeding mechanism
     if current_time - last_speed_increase_time >= speed_increase_interval:
-        speed_multiplier += 0.2  # Increase the game speed multiplier
-        current_time_interval = int(BASE_TIME_INTERVAL / speed_multiplier)
-        pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
+        current_speed += 10  # Increase speed by 10 pixels per second
         last_speed_increase_time = current_time
-        print(f"Game speed increased! Multiplier: {speed_multiplier:.1f}")
+        print(f"Speed increased to {current_speed} pixels per second.")
 
     if not pygame.mixer.music.get_busy():
         play_next_track()
