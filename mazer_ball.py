@@ -92,6 +92,9 @@ pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
 current_track_index = -1
 play_next_track()
 
+# Collision detection variables
+game_over = False
+
 # Game loop
 running = True
 while running:
@@ -126,6 +129,17 @@ while running:
 
     if not pygame.mixer.music.get_busy():
         play_next_track()
+
+    # Collision detection
+    ball_rect = pygame.Rect(ball_x, ball_y, ball_size, ball_size)
+    for row_idx, row_y in enumerate(brick_rows):
+        for col_idx, is_brick in enumerate(brick_patterns[row_idx]):
+            if is_brick:
+                brick_rect = pygame.Rect(col_idx * BRICK_WIDTH, row_y, BRICK_WIDTH, BRICK_HEIGHT)
+                if ball_rect.colliderect(brick_rect):
+                    game_over = True
+                    print("Collision detected! Game Over!")
+                    running = False
 
     # Draw everything
     screen.fill(BLACK)
