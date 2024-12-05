@@ -3,7 +3,6 @@ import pygame
 import os
 import sys
 import random
-import time
 
 # Initialize Pygame
 pygame.init()
@@ -95,40 +94,49 @@ play_next_track()
 # Collision detection variables
 game_over = False
 
+brick_speed = 50  # Pixels per second (initial speed)
+last_frame_time = pygame.time.get_ticks()
+
 # Game loop
 running = True
 while running:
+    # Calculate delta time (time elapsed since last frame)
     current_time = pygame.time.get_ticks()
-    
+    dt = (current_time - last_frame_time) / 1000.0  # Convert ms to seconds
+    last_frame_time = current_time
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.USEREVENT + 1 and bricks_falling:
-            brick_rows = [y + BRICK_HEIGHT for y in brick_rows]
-            if brick_rows and brick_rows[0] >= SCREEN_HEIGHT:
-                brick_rows.pop(0)
-                brick_patterns.pop(0)
-            brick_rows.insert(0, -BRICK_HEIGHT)
-            brick_patterns.insert(0, generate_maze_row())
         elif event.type == pygame.USEREVENT + 2:
             bricks_falling = True
         elif event.type == pygame.MOUSEMOTION:
-            mouse_x, mouse_y = event.pos
+            # Restrict the ball's movement to horizontal only
+            mouse_x, _ = event.pos
             ball_x = mouse_x - ball_size // 2
-            ball_y = mouse_y - ball_size // 2
             ball_x = max(0, min(SCREEN_WIDTH - ball_size, ball_x))
-            ball_y = max(0, min(SCREEN_HEIGHT - ball_size, ball_y))
+            ball_y = SCREEN_HEIGHT // 2 - ball_size // 2  # Fix vertically to the center
+
+    # Update brick positions
+    if bricks_falling:
+        brick_rows = [y + brick_speed * dt for y in brick_rows]
+
+        # Remove rows that are completely off-screen
+        if brick_rows and brick_rows[0] >= SCREEN_HEIGHT:
+            brick_rows.pop(0)
+            brick_patterns.pop(0)
+
+        # Add a new row at the top when needed
+        if not brick_rows or brick_rows[-1] >= 0:
+            brick_rows.append(-BRICK_HEIGHT)
+            brick_patterns.append(generate_maze_row())
 
     # Speeding mechanism
     if current_time - last_speed_increase_time >= speed_increase_interval:
         speed_multiplier += 0.2  # Increase the game speed multiplier
-        current_time_interval = int(BASE_TIME_INTERVAL / speed_multiplier)
-        pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
+        brick_speed = INITIAL_BRICK_SPEED * speed_multiplier
         last_speed_increase_time = current_time
         print(f"Game speed increased! Multiplier: {speed_multiplier:.1f}")
-
-    if not pygame.mixer.music.get_busy():
-        play_next_track()
 
     # Collision detection
     ball_rect = pygame.Rect(ball_x, ball_y, ball_size, ball_size)
