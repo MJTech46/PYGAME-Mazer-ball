@@ -19,7 +19,7 @@ BLACK = (0, 0, 0)
 
 # Directories
 ASSETS_DIR = "assets"
-MUSIC_DIR = os.path.join(ASSETS_DIR, "musics")
+MUSIC_DIR = os.path.join(ASSETS_DIR, "sounds", "musics")
 WALL_SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites", "wall")
 BALL_SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites", "ball")
 
@@ -88,7 +88,7 @@ pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
 pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
 
 # Start the first track
-current_track_index = -1
+current_track_index = random.randint(0,len(music_files)-1) # random selection of the init song
 play_next_track()
 
 # Collision detection variables
