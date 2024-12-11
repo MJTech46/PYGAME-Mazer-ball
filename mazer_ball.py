@@ -21,6 +21,7 @@ WHITE = (255, 255, 255)
 # Directories
 ASSETS_DIR = "assets"
 MUSIC_DIR = os.path.join(ASSETS_DIR, "sounds", "musics")
+EFFECTS_DIR = os.path.join(ASSETS_DIR, "sounds", "effects")
 WALL_SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites", "wall")
 BALL_SPRITES_DIR = os.path.join(ASSETS_DIR, "sprites", "ball")
 
@@ -59,6 +60,13 @@ pygame.display.set_caption("Mazer Ball")
 font = pygame.font.Font(None, 74)
 small_font = pygame.font.Font(None, 36)
 
+
+# Collision detection variables
+game_over = False
+
+brick_speed = 50  # Pixels per second (initial speed)
+last_frame_time = pygame.time.get_ticks()
+
 # Music functions
 def play_next_track():
     """Play the next music track in the playlist."""
@@ -66,9 +74,16 @@ def play_next_track():
     if music_files:
         current_track_index = (current_track_index + 1) % len(music_files)
         pygame.mixer.music.load(music_files[current_track_index])
-        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.set_volume(0.4)
         pygame.mixer.music.play()
         print(f"Now playing: {music_files[current_track_index]}")
+
+def play_sound_effect(filename):
+    sound_mixer = pygame.mixer.Sound(os.path.join(EFFECTS_DIR, filename))
+    sound_mixer.play() 
+
+def play_init_sound(filename="game-countdown.mp3"):
+    play_sound_effect(filename)
 
 # Maze generation
 def generate_maze_row():
@@ -87,29 +102,19 @@ def generate_maze_row():
         row[gap_start + i] = 0
     return row
 
-# Initialize timers
-current_time_interval = BASE_TIME_INTERVAL
-pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
-pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
-
-# Start the first track
-current_track_index = random.randint(0, len(music_files) - 1)  # random selection of the init song
-play_next_track()
-
-# Collision detection variables
-game_over = False
-
-brick_speed = 50  # Pixels per second (initial speed)
-last_frame_time = pygame.time.get_ticks()
-
 # Function to display Game Over screen
 def show_game_over():
+    # screen behavior
     screen.fill(BLACK)
     game_over_text = font.render("Game Over", True, WHITE)
     instructions_text = small_font.render("Press any key to restart", True, WHITE)
     screen.blit(game_over_text, ((SCREEN_WIDTH - game_over_text.get_width()) // 2, SCREEN_HEIGHT // 3))
     screen.blit(instructions_text, ((SCREEN_WIDTH - instructions_text.get_width()) // 2, SCREEN_HEIGHT // 2))
     pygame.display.flip()
+
+    # sound behavior
+    pygame.mixer.music.stop()
+    play_sound_effect("game-fx-9-40197.mp3")
 
     # Wait for key press to restart or exit
     waiting = True
@@ -120,6 +125,19 @@ def show_game_over():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 waiting = False
+                play_init_sound()
+                pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
+
+# Initialize timers
+current_time_interval = BASE_TIME_INTERVAL
+pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
+pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
+
+# Start the first track
+current_track_index = random.randint(0, len(music_files) - 1)  # random selection of the init song
+
+# play the initial starting sound
+play_init_sound()
 
 # Game loop
 while True:
@@ -130,6 +148,7 @@ while True:
     brick_rows = []
     brick_patterns = []
     bricks_falling = False
+    bricks_were_falling = False
     gap_start = (BRICKS_ON_SCREEN // 2) - 1
     speed_multiplier = 1.0
     brick_speed = INITIAL_BRICK_SPEED
@@ -152,6 +171,11 @@ while True:
                 ball_x = max(0, min(SCREEN_WIDTH - ball_size, ball_x))
                 ball_y = SCREEN_HEIGHT // 2 - ball_size // 2
 
+        # Detect state change from False to True for initial music delay
+        if bricks_falling and not bricks_were_falling:
+            play_next_track()  # Trigger the function only once
+            bricks_were_falling = True
+
         # Update brick positions
         if bricks_falling:
             brick_rows = [y + brick_speed * dt for y in brick_rows]
@@ -168,6 +192,7 @@ while True:
             brick_speed = INITIAL_BRICK_SPEED * speed_multiplier
             last_speed_increase_time = current_time
             print(f"Game speed increased! Multiplier: {speed_multiplier:.1f}")
+            play_sound_effect("cute-level-up.mp3")
 
         # Collision detection
         ball_rect = pygame.Rect(ball_x, ball_y, ball_size, ball_size)
@@ -187,7 +212,7 @@ while True:
                 for col_idx, is_brick in enumerate(brick_patterns[row_idx]):
                     if is_brick:
                         screen.blit(brick_image, (col_idx * BRICK_WIDTH, row_y))
-        screen.blit(ball_image, (ball_x, ball_y))
+        screen.blit(ball_image, (ball_x, SCREEN_HEIGHT // 2 - ball_size // 2))
         pygame.display.flip()
 
     show_game_over()
