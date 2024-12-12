@@ -1,4 +1,5 @@
-# Mazer Ball with Game Over Screen
+# Mazer Ball 
+
 import pygame
 import os
 import sys
@@ -59,13 +60,17 @@ pygame.display.set_caption("Mazer Ball")
 # Fonts
 font = pygame.font.Font(None, 74)
 small_font = pygame.font.Font(None, 36)
-
+score_font = pygame.font.Font(None, 48)
 
 # Collision detection variables
 game_over = False
-
 brick_speed = 50  # Pixels per second (initial speed)
 last_frame_time = pygame.time.get_ticks()
+
+# Initialize score
+score = 0
+score_increment_interval = 1000  # Score increases every second
+last_score_update_time = pygame.time.get_ticks()
 
 # Music functions
 def play_next_track():
@@ -102,13 +107,22 @@ def generate_maze_row():
         row[gap_start + i] = 0
     return row
 
+def draw_score():
+    """Draw the score on the screen."""
+    score_text = score_font.render(f"Score: {score}", True, WHITE)
+    score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, 30))
+    pygame.draw.rect(screen, BLACK, score_rect.inflate(20, 20), border_radius=10)
+    screen.blit(score_text, score_rect)
+
 # Function to display Game Over screen
 def show_game_over():
     # screen behavior
     screen.fill(BLACK)
     game_over_text = font.render("Game Over", True, WHITE)
     instructions_text = small_font.render("Press any key to restart", True, WHITE)
+    final_score_text = score_font.render(f"Score: {score}", True, WHITE)
     screen.blit(game_over_text, ((SCREEN_WIDTH - game_over_text.get_width()) // 2, SCREEN_HEIGHT // 3))
+    screen.blit(final_score_text, ((SCREEN_WIDTH - final_score_text.get_width()) // 2, SCREEN_HEIGHT // 2 - 50))
     screen.blit(instructions_text, ((SCREEN_WIDTH - instructions_text.get_width()) // 2, SCREEN_HEIGHT // 2))
     pygame.display.flip()
 
@@ -153,6 +167,7 @@ while True:
     speed_multiplier = 1.0
     brick_speed = INITIAL_BRICK_SPEED
     last_speed_increase_time = pygame.time.get_ticks()
+    score = 0
     
     while running:
         current_time = pygame.time.get_ticks()
@@ -185,6 +200,10 @@ while True:
             if not brick_rows or brick_rows[-1] >= 0:
                 brick_rows.append(-BRICK_HEIGHT)
                 brick_patterns.append(generate_maze_row())
+            # Update score
+            if current_time - last_score_update_time >= score_increment_interval:
+                score += round(5 * speed_multiplier) # initially 5 points/second
+                last_score_update_time = current_time
 
         # Speeding mechanism
         if current_time - last_speed_increase_time >= speed_increase_interval:
@@ -213,6 +232,7 @@ while True:
                     if is_brick:
                         screen.blit(brick_image, (col_idx * BRICK_WIDTH, row_y))
         screen.blit(ball_image, (ball_x, SCREEN_HEIGHT // 2 - ball_size // 2))
+        draw_score()
         pygame.display.flip()
 
     show_game_over()
