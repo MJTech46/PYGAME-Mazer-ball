@@ -50,7 +50,7 @@ gap_start = (BRICKS_ON_SCREEN // 2) - 1
 
 # Speeding mechanism variables
 speed_multiplier = 1.0
-speed_increase_interval = 15000  # 15 seconds in milliseconds
+speed_increase_interval = 10000  # 10 seconds in milliseconds
 last_speed_increase_time = pygame.time.get_ticks()
 
 # Initialize the screen
@@ -94,7 +94,7 @@ def play_init_sound(filename="game-countdown.mp3"):
 def generate_maze_row():
     """Generate a maze row with a random contiguous gap of 0s."""
     global gap_start
-    gap_width = 3
+    gap_width = 4
     row = [1] * BRICKS_ON_SCREEN
     while True:
         new_gap_start = random.randint(
@@ -107,6 +107,7 @@ def generate_maze_row():
         row[gap_start + i] = 0
     return row
 
+# scoring mechanism
 def draw_score():
     """Draw the score on the screen."""
     score_text = score_font.render(f"Score: {score}", True, WHITE)
@@ -162,7 +163,6 @@ while True:
     brick_rows = []
     brick_patterns = []
     bricks_falling = False
-    bricks_were_falling = False
     gap_start = (BRICKS_ON_SCREEN // 2) - 1
     speed_multiplier = 1.0
     brick_speed = INITIAL_BRICK_SPEED
@@ -185,11 +185,10 @@ while True:
                 ball_x = mouse_x - ball_size // 2
                 ball_x = max(0, min(SCREEN_WIDTH - ball_size, ball_x))
                 ball_y = SCREEN_HEIGHT // 2 - ball_size // 2
-
-        # Detect state change from False to True for initial music delay
-        if bricks_falling and not bricks_were_falling:
-            play_next_track()  # Trigger the function only once
-            bricks_were_falling = True
+        
+        # Check if the music has stopped, and play the next track
+        if bricks_falling and not pygame.mixer.music.get_busy():
+            play_next_track()
 
         # Update brick positions
         if bricks_falling:
@@ -201,8 +200,8 @@ while True:
                 brick_rows.append(-BRICK_HEIGHT)
                 brick_patterns.append(generate_maze_row())
             # Update score
-            if current_time - last_score_update_time >= score_increment_interval:
-                score += round(5 * speed_multiplier) # initially 5 points/second
+            if current_time - last_score_update_time >= score_increment_interval / (speed_multiplier*5):
+                score += 1
                 last_score_update_time = current_time
 
         # Speeding mechanism
