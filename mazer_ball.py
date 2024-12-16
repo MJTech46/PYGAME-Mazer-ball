@@ -143,6 +143,15 @@ def show_game_over():
                 play_init_sound()
                 pygame.time.set_timer(pygame.USEREVENT + 2, BRICK_START_DELAY)
 
+# Add Pause Button
+def draw_pause_button():
+    """Draw the pause button on the top-right corner."""
+    pause_text = score_font.render("Pause", True, WHITE)
+    pause_rect = pause_text.get_rect(center=(SCREEN_WIDTH - 70, 30))
+    pygame.draw.rect(screen, BLACK, pause_rect.inflate(20, 20), border_radius=10)
+    screen.blit(pause_text, pause_rect)
+    return pause_rect
+
 # Initialize timers
 current_time_interval = BASE_TIME_INTERVAL
 pygame.time.set_timer(pygame.USEREVENT + 1, current_time_interval)
@@ -158,6 +167,7 @@ play_init_sound()
 while True:
     running = True
     game_over = False
+    paused = False  # Add paused state
     ball_x = SCREEN_WIDTH // 2
     ball_y = SCREEN_HEIGHT - (BRICK_HEIGHT * 2)
     brick_rows = []
@@ -178,14 +188,30 @@ while True:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.USEREVENT + 2:
+            elif event.type == pygame.USEREVENT + 2 and not paused:
                 bricks_falling = True
-            elif event.type == pygame.MOUSEMOTION:
+            elif event.type == pygame.MOUSEMOTION and not paused:
                 mouse_x, _ = event.pos
                 ball_x = mouse_x - ball_size // 2
                 ball_x = max(0, min(SCREEN_WIDTH - ball_size, ball_x))
                 ball_y = SCREEN_HEIGHT // 2 - ball_size // 2
-        
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if the pause button is clicked
+                if pause_button_rect.collidepoint(event.pos):
+                    paused = not paused
+                    if paused:
+                        print("Game Paused!")
+                    else:
+                        print("Game Resumed!")
+
+        if paused:
+            # Display paused text
+            screen.fill(BLACK)
+            paused_text = font.render("Paused", True, WHITE)
+            screen.blit(paused_text, ((SCREEN_WIDTH - paused_text.get_width()) // 2, SCREEN_HEIGHT // 3))
+            pygame.display.flip()
+            continue
+
         # Check if the music has stopped, and play the next track
         if bricks_falling and not pygame.mixer.music.get_busy():
             play_next_track()
@@ -232,6 +258,7 @@ while True:
                         screen.blit(brick_image, (col_idx * BRICK_WIDTH, row_y))
         screen.blit(ball_image, (ball_x, SCREEN_HEIGHT // 2 - ball_size // 2))
         draw_score()
+        pause_button_rect = draw_pause_button()  # Draw the pause button
         pygame.display.flip()
 
     show_game_over()
