@@ -23,6 +23,11 @@
 
 ---
 
+## Screenshot
+![Issue Screenshot](https://github.com/user-attachments/assets/d3343269-844e-4b2b-a732-568d3bd33801)
+
+---
+
 ## 📂 Project Structure
 
 ```markdown
@@ -42,7 +47,7 @@ PY-Mazer-Ball/
 - [x] Design the game concept.
 - [x] Create the maze and obstacle system.
 - [x] Implement ball physics and movement.
-- [ ] Add scoring and timer mechanics.
+- [x] Add scoring and timer mechanics.
 - [ ] Polish graphics and animations.
 - [ ] Include sound effects and background music.
 
